@@ -68,10 +68,43 @@ net = Net()
 
 import torch.optim as optim
 
+# criterion = nn.CrossEntropyLoss()
+# optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+
+# import time
+# start = time.time()
+# for epoch in range(2):
+
+#     running_loss = 0.0
+#     for i, data in enumerate(trainloader, 0):
+#         # 获取输入数据
+#         inputs, labels = data
+#         # 清空梯度缓存
+#         optimizer.zero_grad()
+
+#         outputs = net(inputs)
+#         loss = criterion(outputs, labels)
+#         loss.backward()
+#         optimizer.step()
+
+#         # 打印统计信息
+#         running_loss += loss.item()
+#         if i % 2000 == 1999:
+#             # 每 2000 次迭代打印一次信息
+#             print('[%d, %5d] loss: %.3f' % (epoch + 1, i+1, running_loss / 2000))
+#             running_loss = 0.0
+# print('Finished Training! Total cost time: ', time.time()-start)
+
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(device)
+
+import time
+# 在 GPU 上训练注意需要将网络和数据放到 GPU 上
+net.to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-import time
 start = time.time()
 for epoch in range(2):
 
@@ -79,6 +112,7 @@ for epoch in range(2):
     for i, data in enumerate(trainloader, 0):
         # 获取输入数据
         inputs, labels = data
+        inputs, labels = inputs.to(device), labels.to(device)
         # 清空梯度缓存
         optimizer.zero_grad()
 
@@ -93,10 +127,12 @@ for epoch in range(2):
             # 每 2000 次迭代打印一次信息
             print('[%d, %5d] loss: %.3f' % (epoch + 1, i+1, running_loss / 2000))
             running_loss = 0.0
-print('Finished Training! Total cost time: ', time.time()-start)
+print('Finished Training! Total cost time: ', time.time() - start)
 
 dataiter = iter(testloader)
 images, labels = next(dataiter)
+
+images, labels = images.to(device), labels.to(device)
 
 # 打印图片
 print('GroundTruth: ', ' '.join('%5s' % classes[labels[j]] for j in range(4)))
@@ -114,6 +150,7 @@ class_total = list(0. for i in range(10))
 with torch.no_grad():
     for data in testloader:
         images, labels = data
+        images, labels = images.to(device), labels.to(device)
         outputs = net(images)
         _, predicted = torch.max(outputs, 1)
         c = (predicted == labels).squeeze()
